@@ -2,7 +2,7 @@ class Controller {
 
     constructor(boardWidth, boardHeight, boardPortion) {
         this.board = new Board(boardWidth, boardHeight, boardPortion);
-        this.player = new Player(30,this.board.portion*2,{x:10, y: this.board.height - this.board.portion *2 - this.board.portion }, 10);
+        this.player = new Player(this.board.portion,this.board.portion*2,{x:10, y: this.board.height - this.board.portion *2 - this.board.portion }, 10);
         this.view = new View();
 
         this.createMap();
@@ -105,12 +105,55 @@ class Controller {
 
     startPlayerFalling() {
         this.player.startPlayerFalling(setInterval(() => {
-            if (this.player.position.y < this.board.height - this.board.portion - this.player.height) {
+            if (this.player.position.y < this.board.height - this.board.portion - this.player.height && this._canPlayerContinueFalling() ) {
                 this.player.position.y += 3;
             } else {
                 this.player.stopPlayerFalling();
             }
         },1));
+    }
+    //https://www.w3schools.com/graphics/game_obstacles.asp
+    _canPlayerContinueFalling() {
+        let response = true;
+
+        const posY = this.player.position.y - this.player.height;
+        const posX = this._getRoundedXPosition(this.player.position.x);
+
+        this.view.arrayBricks.forEach(brick => {
+           if (brick[0] === posX && brick[1] === posY) {
+               response = false;
+           }
+        });
+
+        return response;
+    }
+
+    /*
+        Redondea el número al mas cercano a la porcion
+        302 -> 300
+        326 -> 350
+        356 -> 350
+        389 -> 400
+     */
+    _getRoundedXPosition(position) {
+
+        const portion = this.board.portion;
+        if (position % 100 < portion) {
+            if (position % 100 < portion / 2) {
+                position = position - (position % 100);
+            } else {
+                position = (position - (position % 100)) + portion;
+            }
+
+        } else {
+            if (position % 100 < portion * 2 - ((portion*2) / 4) ) {
+                position = (position - (position % 100)) + portion;
+            } else {
+                position = (position - (position % 100)) + portion * 2;
+            }
+        }
+
+        return position;
     }
 
     createMap() {
